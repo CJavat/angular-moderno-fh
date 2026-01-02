@@ -1,1 +1,19 @@
-<country-list [countries]="[]" />
+<div>
+  @for (region of regions; track region) {
+  <!-- btn-secondary -->
+  <button
+    class="btn mx-2"
+    [ngClass]="selectedRegion() === region ? 'btn-secondary': 'btn-primary'"
+    (click)="this.selectedRegion.set(region)"
+  >
+    {{region}}
+  </button>
+  }
+</div>
+
+<country-list
+  [countries]="regionResource.value() ?? []"
+  [errorMessage]="regionResource.error()"
+  [isEmpty]="regionResource.value()?.length === 0"
+  [isLoading]="regionResource.isLoading()"
+/>

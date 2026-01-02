@@ -1,4 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, linkedSignal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { of } from 'rxjs';
 import { CountryService } from '../../services/country.service';
@@ -12,13 +13,22 @@ import { CountryList } from '../../components/country-list/country-list';
 })
 export class ByCapitalPage {
   countryService = inject(CountryService);
-  query = signal<string>('');
+
+  activatedRoute = inject(ActivatedRoute);
+  router = inject(Router);
+
+  queryParam = this.activatedRoute.snapshot.queryParamMap.get('query') ?? '';
+  query = linkedSignal<string>(() => this.queryParam);
 
   //? Está forma es para trabajar mediante Observables
   countryResource = rxResource({
     request: () => ({ query: this.query() }),
     loader: ({ request }) => {
       if (!request.query) return of([]);
+
+      this.router.navigate(['/country/by-capital'], {
+        queryParams: { query: request.query },
+      });
 
       return this.countryService.searchByCapital(request.query);
     },
