@@ -1,6 +1,23 @@
-import { FormArray, FormGroup, ValidationErrors } from '@angular/forms';
+import {
+  AbstractControl,
+  FormArray,
+  FormGroup,
+  ValidationErrors,
+} from '@angular/forms';
+
+async function sleep() {
+  return new Promise((res) => {
+    setTimeout(() => {
+      res(true);
+    }, 2500);
+  });
+}
+
 export class FormUtils {
   //* Expresiones regulares
+  static namePattern = '([a-zA-Z]+) ([a-zA-Z]+)';
+  static emailPattern = '^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,4}$';
+  static notOnlySpacesPattern = '^[a-zA-Z0-9]+$';
 
   static getTextError(errors: ValidationErrors) {
     for (const key of Object.keys(errors)) {
@@ -13,6 +30,18 @@ export class FormUtils {
 
         case 'min':
           return `Valor mínimo de ${errors['min'].min}`;
+
+        case 'email':
+          return `El correo electrónico ingresado no es válido.`;
+
+        case 'emailTaken':
+          return 'El correo electrónico ya esta siendo usado por otro usuario.';
+
+        case 'notStrider':
+          return `El nombre de usuario strider no puede ser usado.`;
+
+        default:
+          return `Error de validación no controlado. ${key}`;
       }
     }
 
@@ -41,12 +70,49 @@ export class FormUtils {
 
   static getFieldErrorInArray(
     formArray: FormArray,
-    index: number
+    index: number,
   ): string | null {
     if (formArray.controls.length === 0) return null;
 
     const errors = formArray.controls[index].errors ?? {};
 
     return this.getTextError(errors);
+  }
+
+  static isFieldOneEqualsFieldTwo(field1: string, field2: string) {
+    return (formGroup: AbstractControl) => {
+      const field1Value = formGroup.get(field1)?.value;
+      const field2Value = formGroup.get(field2)?.value;
+
+      return field1Value === field2Value
+        ? null
+        : {
+            passwordsNotEqual: true,
+          };
+    };
+  }
+
+  static notStrider(control: AbstractControl): ValidationErrors | null {
+    const formValue = control.value;
+
+    return formValue === 'strider'
+      ? {
+          notStrider: true,
+        }
+      : null;
+  }
+
+  static async checkingServerResponse(
+    control: AbstractControl,
+  ): Promise<ValidationErrors | null> {
+    await sleep(); // 2.5 seg
+
+    const formValue = control.value;
+
+    return formValue === 'hola@mundo.com'
+      ? {
+          emailTaken: true,
+        }
+      : null;
   }
 }
